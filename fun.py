@@ -137,8 +137,9 @@ def insertsong():
     
     try:
         # Takes user details as input
-        song_id =  cur.execute("SELECT SONG_ID FROM SONG ORDER BY SONG_ID DESC LIMIT 1;")
-        print(type(song_id))
+        cur.execute("SELECT SONG_ID FROM SONG ORDER BY SONG_ID DESC LIMIT 1;")
+        song_id = cur.fetchall()
+
         row = {}
         print("Enter new song's details: ")
         row['name'] = input("Name: ")
@@ -154,22 +155,24 @@ def insertsong():
         row['path'] = input("Path: ")
         row['album'] = input("Album: ")
         row['artist'] = input("Artist: ")
-      
+        
         Q1 = "SELECT ALBUM_ID FROM ALBUM WHERE ALBUM_NAME = " + '"' + row['album'] + '"' + ";"
-        albumid = cur.execute(Q1)
+        cur.execute(Q1)
+        albumid = cur.fetchall()
         
         Q2 = "SELECT ARTIST_ID FROM ARTIST WHERE ARTIST_NAME = " + '"' + row['artist'] + '"' + ";"
-        artistid = cur.execute(Q2)
+        cur.execute(Q2)
+        artistid = cur.fetchall()
         
-        query = "INSERT INTO SONG (SONG_TITLE, SONG_LENGTH, SONG_LYRICS, DATE_ADDED, SONG_PATH ,ALBUM_ID, ARTIST_ID) VALUES ('%s', '%d', '%s', '%s', '%s','%d', '%d');" %(
-           row['name'], row['length'],row['lyrics'], row['date'],row['path'], albumid, artistid)
+        
+        query = "INSERT INTO SONG (SONG_TITLE, SONG_LENGTH, SONG_LYRICS, DATE_ADDED, SONG_PATH ,ALBUM_ID, ARTIST_ID) VALUES ('%s', '%s', '%s', '%s', '%s','%d', '%d');" %(
+            row['name'], row['length'],row['lyrics'], row['date'],row['path'], int(albumid[0]["ALBUM_ID"]), int(artistid[0]["ARTIST_ID"]))
         
         cur.execute(query)
-        print("here")
         
-        # for i in sep:
-        #     q = "INSERT INTO SONG_GENRE (SONG_ID, GENRE) VALUES ('%d', '%s');" % (song_id,i)
-        #     cur.execute(q)
+        for i in sep:
+            q = "INSERT INTO SONG_GENRE (SONG_ID, GENRE) VALUES ('%d', '%s');" % (song_id[0]["SONG_ID"] + 1,i)
+            cur.execute(q)
 
         con.commit()
         print("Song inserted successfully")
@@ -198,6 +201,8 @@ def getonehrpodcast():
         print("Failed to retrieve from database")
         print(">>>>>>>>>>>>>", e)
     return
+
+
 
 def hireAnEmployee():
     """
