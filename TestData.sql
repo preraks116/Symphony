@@ -3,7 +3,7 @@ INSERT INTO `USER` VALUES (1,'parth','marth@paradia.com','bum bum','2010-10-10',
 UNLOCK TABLES;
 
 LOCK TABLES `ARTIST` WRITE;
-INSERT INTO `ARTIST` VALUES (1,'parth','50000','Banta Rapper','Too hot to handle' ) , (2,'harshita','6000','bathroom singer','helo'), (3,'Bihari','1','Bojpuri','Rinkiya ke papa')   ;
+INSERT INTO `ARTIST` VALUES (1,'parth','50000','Banta Rapper','Too hot to handle' ) , (2,'harshita','6000','bathroom singer','helo'), (3,'Bihari','1','Bojpuri','Rinkiya ke papa') , (4,'Hari','40000000','Bojpi','Rinkiya ke')   ;
 UNLOCK TABLES;
 
 LOCK TABLES `ALBUM` WRITE;
@@ -11,7 +11,7 @@ INSERT INTO `ALBUM` VALUES (1,'nahi degi', '2020-10-5' , 'Not available', 2) , (
 UNLOCK TABLES;
 
 LOCK TABLE `SONG` WRITE;
-INSERT INTO `SONG` VALUES (1,'dhoom dhoom','120','meh', 'rock' , '2015-6-9' ,'modi', 'img not found' , 1 , 1 ),(2,'mera mann kehne laga','250','hoga kahi', 'casual' , '2015-8-9' ,'hippo', 'img2' , 2 , 2 ), (3,'litti choka','560','thak gaya vro', 'bhojpuri' , '2015-6-3' ,'lalu', 'e laddo lo' , 3 , 3 ); 
+INSERT INTO `SONG` VALUES (1,'dhoom dhoom','120','meh', '2015-6-9' ,'modi' , 1 , 1 ),(2,'mera mann kehne laga','250','hoga kahi' , '2015-8-9' ,'hippo' , 2 , 2 ), (3,'litti choka','560','thak gaya vro' , '2015-6-3' , 'e laddo lo' , 3 , 3 ); 
 UNLOCK TABLES;
 
 LOCK TABLE `PLAYLIST` WRITE;
@@ -19,8 +19,25 @@ INSERT INTO `PLAYLIST` VALUES (1,'playlist 1', 'desc 1', '10' , true) , (2,'play
 UNLOCK TABLE;
 
 LOCK TABLE `PODCAST` WRITE;
-INSERT INTO `PODCAST` VALUES (1, )
+INSERT INTO `PODCAST` VALUES (1,'podcast1', 'sports', 11, 280, 'asdfasd', 3 ) , (2,'podcast2', 'action', 15, 22, 'asdasdfasd', 1), (3,'podcast3', 'romance', 221, 28044, 'asdf', 1);
 UNLOCK TABLE;
+
+LOCK TABLE `PODCAST_LANGUAGE` WRITE;
+INSERT INTO `PODCAST_LANGUAGE` VALUES (1 , 'hindi') , (2 , 'eng') , (3 , 'chinki');
+UNLOCK TABLE;
+
+LOCK TABLE `PLAN` WRITE;
+INSERT INTO `PLAN` VALUES (1 , 'plan1' , 5000) , (2 , 'plan2' , 50000 );
+UNLOCK TABLE;
+
+LOCK TABLE `PREMIUM_USERS` WRITE;
+INSERT INTO `PREMIUM_USERS` VALUES (1 , 2) , (2 , 1 ) , (3 , 2);
+UNLOCK TABLE;
+
+LOCK TABLE `LIKES` WRITE;
+INSERT INTO `LIKES` VALUES (1 , 2) , (2 , 3 ) , (3 , 1);
+UNLOCK TABLE;
+
 
 -- DROP TABLE IF EXISTS `PODCAST`;
 -- CREATE TABLE `PODCAST` (

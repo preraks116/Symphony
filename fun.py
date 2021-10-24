@@ -3,58 +3,151 @@ import pymysql
 import pymysql.cursors 
 from datetime import date
 
-# is_explicit in insert song last mein karte hain
 
-def query_song():
-    
-    # Select all song names with a input genre “Folk”
-
+def analysis_popular_albums(): 
+    """
+    List of popular albums based on average likes on all song
+    """
     try:
-        row = {}
-        print("Enter new user's details: ")
-        global user_id
-        row['name'] = input("Name: ")
-        row['email'] = input("Email: ")
-        row['password'] = input("Password: ")
-        row['registration_date'] = date.today()
-        row['state'] = input("State: ")
-        row['country'] = input("Country: ")
-        row['mobile'] = input("Mobile: ")
-        # row['img'] = input("Image: ")
-
-        query = "INSERT INTO USER (USER_NAME, USER_EMAIL, USER_PASSWORD, USER_REGISTRATION_DATE, USER_STATE, USER_COUNTRY, USER_MOBILE_NUMBER, USER_IMG) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', NULL);" %(
-           row['name'], row['email'], row['password'], row['registration_date'], row['state'], row['country'], row['mobile'])
+        query = "SELECT ALBUM_NAME FROM ALBUM,LIKES ORDER BY COUNT( SELECT * FROM LIKES, ALBUM WHERE LIKES.SONG_ID IN (SELECT SONG_ID FROM SONG, ALBUM WHERE SONG.ALBUM_ID = ALBUM.ALBUM_ID) )/COUNT(SELECT * SONGS, ALBUM WHERE ALBUM.ALBUM_ID = SONG.SONG_ID ) DESC LIMIT 10;"
+        cur.execute(query)
+        row = cur.fetchall()
+        print("Popular albums: ")
+        for i in row:
+            print(i['ALBUM_NAME'])
         
-        # print(query)
+        con.commit()
+        print("Query executed successfully")
+    except Exception as e:
+        con.rollback()
+        print("Failed to insert into database")
+        print(">>>>>>>>>>>>>", e)
+    return
+
+        
+
+def addEpisode():
+    """
+    add a new episode in a existing podcast
+    TO DEBUG
+    """
+    try:
+        # Takes user details as input
+        row = {}
+        print("Enter new episode's details: ")
+        
+        row["podcast_name"] = input("Podcast Name: ")
+
+        Q = "SELECT PODCAST_ID FROM PODCAST WHERE PODCAST_NAME = '%s' ;" % row["podcast_name"]
+        cur.execute()
+        list = cur.fetchall()
+        podcast_id = list[0]["PODCAST_ID"]
+
+        row['title'] = input("Title: ")
+        row['number'] = input("Number: ")
+        row['duration'] = input("Duration: ")
+        row['release_date'] = date.today()
+        row['desc'] = input("Description: ")
+
+        query = "INSERT INTO EPISODE (PODCAST_ID, EPISODE_TITLE, EPISODE_NUMBER, EPISODE_DURATION,EPISODE_RELEASE_DATE, EPISODE_DESCRIPTION ) VALUES ('%d', '%s', '%d', '%d', '%s', '%s');" % (
+            podcast_id, row['title'], row['number'], row['duration'], row['release_date'], row['desc'])
+        
         cur.execute(query)
         con.commit()
-        print("User added successfully")
+        print("Podcast added successfully")
+
+    except Exception as e:
+        con.rollback()
+        print("Failed to insert into database")
+        print(">>>>>>>>>>>>>", e)
+    return
+
+
+
+def query_podcastlanguage():
+    """
+    Select all podcasts available in a given language
+    """
+    try:
+        row = input("Podcast Language: ")
+        query = "SELECT PODCAST_TITLE FROM PODCAST, PODCAST_LANGUAGE WHERE PODCAST_LANGUAGE.LANGUAGE = '%s' AND PODCAST.PODCAST_ID = PODCAST_LANGUAGE.PODCAST_ID;" %(row)
+        
+        cur.execute(query)
+        list = cur.fetchall()
+        #print(list)
+        #print(type(list))
+
+        print("Podcasts in the given language: ")
+        for s in list:
+            print(s["PODCAST_TITLE"])
+            
+        con.commit()
+        print("Query executed successfully")
     except Exception as e:
         con.rollback()
         print("Failed to insert into database")
         print(">>>>>>>>>>>>>", e)
     return
     
+def query_song_in_album():
 
-def option2():
     """
-    Function to implement option 1
+    Select all songs in a given album
     """
-    print("Not implemented")
+
+    try:
+        row = input("Album Name: ")
+        query = "SELECT SONG_TITLE FROM SONG,ALBUM WHERE ALBUM_NAME = '%s' AND ALBUM.ALBUM_ID = SONG.ALBUM_ID;" %(row)
+        
+        cur.execute(query)
+        list = cur.fetchall()
+        # print(list)
+        # print(type(list))
 
 
-def option3():
-    """
-    Function to implement option 2
-    """
-    print("Not implemented")
+        print("Songs in the given album: ")
+        for s in list:
+            print(s["SONG_TITLE"])
+            
+        con.commit()
+        print("Query executed successfully")
+    except Exception as e:
+        con.rollback()
+        print("Failed to insert into database")
+        print(">>>>>>>>>>>>>", e)
+    return
 
 
-def option4():
+
+
+# is_explicit in insert song last mein karte hain
+def query_song():
     """
-    Function to implement option 3
+    Select all song names with a input genre say “Pop”
     """
-    print("Not implemented")
+    try:
+        # print("Enter Song Genre: ")
+        row = input("Genre: ")
+        query = "SELECT SONG_TITLE FROM SONG_GENRE, SONG WHERE SONG_GENRE.GENRE = '%s' AND SONG.SONG_ID = SONG_GENRE.SONG_ID;" %(row)
+        
+        cur.execute(query)
+        list = cur.fetchall()
+        # print(list)
+        # print(type(list))
+
+        for s in list:
+            print(s["SONG_TITLE"])
+
+
+        con.commit()
+        print("Query executed successfully")
+        
+    except Exception as e:
+        con.rollback()
+        print("Failed to insert into database")
+        print(">>>>>>>>>>>>>", e)
+    return
+    
 
 def removeuserbyemail():
     """
@@ -190,11 +283,53 @@ def getonehrpodcast():
     try:
         
         query = "SELECT * FROM PODCAST WHERE PODCAST_TOTAL_DURATION >= 3600;"
-        # print(query)
-        row = cur.execute(query)
-        print("Podcasts whose length is greater than 1 hour: ")
+        cur.execute(query)
+        row = cur.fetchall()
+        
+        print("Podcasts whose duration is greater than 1 hour: ")
         for i in row:
-            print(i)
+            print(i['PODCAST_TITLE'])
+            
+        con.commit()
+    except Exception as e:
+        con.rollback()
+        print("Failed to retrieve from database")
+        print(">>>>>>>>>>>>>", e)
+    return
+
+def getalbumsbyartist():
+    """
+    Function to get all albums by a particular artist
+    """
+    try:
+        print("Enter artist's name: ")
+        row = input("Artist: ")
+        query = "SELECT ALBUM_NAME FROM ALBUM, ARTIST WHERE ARTIST.ARTIST_NAME = '%s' AND ALBUM.ARTIST_ID = ARTIST.ARTIST_ID;" %(row)
+        cur.execute(query)
+        row = cur.fetchall()
+        print("Albums by artist: ")
+        for i in row:
+            print(i['ALBUM_NAME'])
+        con.commit()
+    except Exception as e:
+        con.rollback()
+        print("Failed to retrieve from database")
+        print(">>>>>>>>>>>>>", e)
+    return
+
+def getartistwith1lakhfollower():
+    """
+    Function to get artist with over 1 lakh followers
+    """
+    try:
+        query = "SELECT ARTIST_NAME FROM ARTIST WHERE ARTIST_FOLLOWERS >= 100000;"
+        cur.execute(query)
+        row = cur.fetchall()
+        print("Artist with over 1 lakh followers: ")
+        
+        for i in row:
+            print(i['ARTIST_NAME'])
+            
         con.commit()
     except Exception as e:
         con.rollback()
@@ -203,46 +338,81 @@ def getonehrpodcast():
     return
 
 
-
-def hireAnEmployee():
+def getartistmaxfollower():
     """
-    This is a sample function implemented for the refrence.
-    This example is related to the Employee Database.
-    In addition to taking input, you are required to handle domain errors as well
-    For example: the SSN should be only 9 characters long
-    Sex should be only M or F
-    If you choose to take Super_SSN, you need to make sure the foreign key constraint is satisfied
-    HINT: Instead of handling all these errors yourself, you can make use of except clause to print the error returned to you by MySQL
+    Function to get artist with maximum followers
     """
     try:
-        # Takes emplyee details as input
-        row = {}
-        print("Enter new employee's details: ")
-        name = (input("Name (Fname Minit Lname): ")).split(' ')
-        row["Fname"] = name[0]
-        row["Minit"] = name[1]
-        row["Lname"] = name[2]
-        row["Ssn"] = input("SSN: ")
-        row["Bdate"] = input("Birth Date (YYYY-MM-DD): ")
-        row["Address"] = input("Address: ")
-        row["Sex"] = input("Sex: ")
-        row["Salary"] = float(input("Salary: "))
-        row["Dno"] = int(input("Dno: "))
-
-        query = "INSERT INTO USER(Fname, Minit, Lname, Ssn, Bdate, Address, Sex, Salary, Dno) VALUES('%s', '%c', '%s', '%s', '%s', '%s', '%c', '%f', '%d')" % (
-            row["Fname"], row["Minit"], row["Lname"], row["Ssn"], row["Bdate"], row["Address"], row["Sex"], row["Salary"], row["Dno"])
-
-        print(query)
+        query = "SELECT ARTIST_NAME FROM ARTIST WHERE ARTIST_FOLLOWERS = (SELECT MAX(ARTIST_FOLLOWERS) FROM ARTIST);"
         cur.execute(query)
+        row = cur.fetchall()
+        print("Artist with maximum followers: ")
+        print(row[0]['ARTIST_NAME'])
         con.commit()
-
-        print("Inserted Into Database")
-
     except Exception as e:
         con.rollback()
-        print("Failed to insert into database")
+        print("Failed to retrieve from database")
         print(">>>>>>>>>>>>>", e)
+    return
 
+def playlistwithmaxsaves():
+    """
+    Function to get playlist with maximum saves
+    """
+    try:
+        print("Playlist with maximum saves: ")
+        query = "SELECT * FROM PLAYLIST WHERE PLAYLIST_SAVES = (SELECT MAX(PLAYLIST_SAVES) FROM PLAYLIST);"
+        cur.execute(query)
+        row = cur.fetchall()
+        print("podcasts with minimum duration: ")
+        print(row[0]['PLAYLIST_TITLE'])
+        con.commit()
+    except Exception as e:
+        con.rollback()
+        print("Failed to retrieve from database")
+        print(">>>>>>>>>>>>>", e)
+    return
+
+def premiumuser():
+    """
+    Function to get playlist with maximum saves
+    """
+    try:
+        print("Enter the plan name: ")
+        row = input("PLAN: ")
+        query = "SELECT PLAN_ID FROM PLAN WHERE PLAN_NAME = '%s';" %(row)
+        cur.execute(query)
+        planid = cur.fetchall()
+        print("Users with this plan: ")
+        Q2 = "SELECT USER_NAME FROM PREMIUM_USERS WHERE PLAN_ID = '%d';" %(planid[0]['PLAN_ID'])
+        cur.execute(Q2)
+        userid = cur.fetchall()
+
+        for i in userid:
+            print(i["USER_NAME"])
+
+        con.commit()
+    except Exception as e:
+        con.rollback()
+        print("Failed to retrieve from database")
+        print(">>>>>>>>>>>>>", e)
+    return
+
+def mindurationpodcast():
+    """
+    Function to get podcast with minimum duration
+    """
+    try:
+        print("Podcast with minimum duration: ")
+        query = "SELECT PODCAST_TITLE FROM PODCAST WHERE PODCAST_TOTAL_DURATION = (SELECT MIN(PODCAST_TOTAL_DURATION) FROM PODCAST);"
+        cur.execute(query)
+        row = cur.fetchall()
+        print(row[0]['PODCAST_TITLE'])
+        con.commit()
+    except Exception as e:
+        con.rollback()
+        print("Failed to retrieve from database")
+        print(">>>>>>>>>>>>>", e)
     return
 
 
@@ -254,17 +424,35 @@ def dispatch(ch):
     if(ch == 1):
         insertuser()
     elif(ch == 2):
-        option2()
+        getalbumsbyartist()     # query
     elif(ch == 3):
-        option3()
+        query_song()    # query
     elif(ch == 4):
-        option4()
+        getartistmaxfollower()  # query
     elif(ch == 5):
         removeuserbyemail()
     elif(ch == 6):
-        updateusercontact()
+        updateusercontact() 
     elif(ch == 7):
         insertsong()
+    elif(ch == 8):
+        getonehrpodcast()   # query
+    elif(ch == 9):
+        playlistwithmaxsaves()  # query
+    elif(ch == 10):
+        mindurationpodcast()
+    elif(ch == 11):
+        getartistwith1lakhfollower()    # query
+    elif(ch == 12):
+        query_podcastlanguage()
+    elif(ch == 13):
+        query_song_in_album()
+    elif(ch == 14):
+        premiumuser()
+    elif(ch == 15):
+        addEpisode()
+    elif(ch == 16):
+        analysis_popular_albums()
     else:
         print("Error: Invalid Option")
 
@@ -299,16 +487,25 @@ while(1):
             while(1):
                 tmp = sp.call('clear', shell=True)
                 # Here taking example of Employee Mini-world
-                print("1. Insert User")  # Hire an Employee
-                print("2. Option 2")  # Fire an Employee
-                print("3. Option 3")  # Promote Employee
-                print("4. Option 4")  # Employee Statistics
+                print("1. Insert User")  
+                print("2. Get All Albums By Artist") 
+                print("3. Query Song")  
+                print("4. Get Artist with max followers") 
                 print("5. Remove User By Email")
                 print("6. Update User Contact")
                 print("7. Insert Song")
+                print("8. Get Podcasts of greater than 1 hour duration")
+                print("9. Get Playlist with max saves")
+                print("10. Get Podcast with minimum duration")
+                print("11. Get artist with over 1 lakh followers")
+                print("12. Query Podcast Language")
+                print("13. Get all songs in album")
+                print("14. Get premium users with specific plan")
+                print("15. Add an episode in a existing podcast")
+                print("16. Analysis of popular album")
                 ch = int(input("Enter choice> "))
                 tmp = sp.call('clear', shell=True)
-                if ch == 8:
+                if ch == 17:
                     exit()
                 else:
                     dispatch(ch)
