@@ -9,13 +9,30 @@ def analysis_popular_albums():
     List of popular albums based on average likes on all song
     """
     try:
-        query = "SELECT ALBUM_NAME FROM ALBUM,LIKES ORDER BY COUNT( SELECT * FROM LIKES, ALBUM WHERE LIKES.SONG_ID IN (SELECT SONG_ID FROM SONG, ALBUM WHERE SONG.ALBUM_ID = ALBUM.ALBUM_ID) )/COUNT(SELECT * SONGS, ALBUM WHERE ALBUM.ALBUM_ID = SONG.SONG_ID ) DESC LIMIT 10;"
+        album = {}
+        query = "SELECT ALBUM_NAME, ALBUM_ID FROM ALBUM"
+       # query = "SELECT ALBUM_NAME FROM ALBUM ORDER BY AVG (SELECT * FROM ALBUM WHERE LIKES.SONG_ID IN (SELECT TOTAL_LIKES FROM SONG, ALBUM WHERE SONG.ALBUM_ID = ALBUM.ALBUM_ID)) DESC LIMIT 10;"
+        # query = "SELECT ALBUM_NAME FROM ALBUM ORDER BY AVG(SELECT TOTAL_LIKES FROM SONG, ALBUM WHERE SONG.ALBUM_ID = ALBUM.ALBUM_ID) DESC LIMIT 10;"
+
         cur.execute(query)
-        row = cur.fetchall()
-        print("Popular albums: ")
-        for i in row:
-            print(i['ALBUM_NAME'])
+        album = cur.fetchall()
+        for i in album:
+            query2 = "SELECT AVG(TOTAL_LIKES) FROM SONG WHERE SONG.ALBUM_ID = '%d';" % (i["ALBUM_ID"])
+            cur.execute(query2)
+            avg_likes = cur.fetchall()
+            # print(avg_likes)
+            # print(type(avg_likes))
+            avg_likes = avg_likes[0]["AVG(TOTAL_LIKES)"]
+            i["avg_likes"] = avg_likes
         
+        # sorting album based on avg likes
+        album = sorted(album, key=lambda i: i["avg_likes"], reverse=True)
+
+        print("Popular albums: ")
+        for i in range(0,len(album)):
+            print(i+1," ",":"," ",album[i]['ALBUM_NAME'], " ( with average likes : ",album[i]["avg_likes"], " )",sep="")
+        
+        print("")
         con.commit()
         print("Query executed successfully")
     except Exception as e:
@@ -24,33 +41,221 @@ def analysis_popular_albums():
         print(">>>>>>>>>>>>>", e)
     return
 
+def analysis_top_genre():
+    """
+    List of top genres for a user based on song likes
+    """
+    try:
+        # all songs liked by a user
+        row = {}
+        row["user_name"] = input("USER NAME: ")
+        Q = "SELECT USER_ID FROM USER WHERE USER_NAME = '%s' ;" % row["user_name"]
+        cur.execute(Q)
+        list = cur.fetchall()
+        user_id = int(list[0]["USER_ID"])
+
+        query = "SELECT SONG_ID FROM LIKES WHERE LIKES.USER_ID = '%d';" %(user_id)
+        cur.execute(query)
+        list_liked_song = cur.fetchall()
+
+        print(list_liked_song)
         
+          
+        query = "SELECT DISTINCT GENRE FROM SONG_GENRE;"
+        cur.execute(query)
+        list_all_genres = cur.fetchall()
+
+        print(list_all_genres)
+        
+        genre_frequency = {}
+        
+        for i in list_all_genres:
+            genre_frequency[i["GENRE"]] = 0
+                
+        print(genre_frequency)
+        print(type(genre_frequency))
+
+
+        for i in list_liked_song:       
+            q = "SELECT GENRE FROM SONG_GENRE WHERE SONG_GENRE.SONG_ID = '%d';" %(i["SONG_ID"])
+            cur.execute(q)
+            genre_list = cur.fetchall()
+
+            # print(type(genre_list))
+            print(genre_list)
+            #print(i)
+            
+            for j in genre_list:
+                genre_frequency[j["GENRE"]] = genre_frequency[j["GENRE"]] + 1
+            
+        genre_frequency = sorted(genre_frequency, key=lambda i: i["GENRE"], reverse=True)
+
+
+        print("Top 3 Genres: ")
+        p = 0
+        for i in genre_frequency:
+            p += 1 
+            if(p == 3):
+                break
+            print(i)
+        
+        # print("")
+
+        con.commit()
+        print("Query executed successfully")
+    except Exception as e:
+        con.rollback()
+        print("Failed to insert into database")
+        print(">>>>>>>>>>>>>", e)
+    return
+
+    
+def userlikessong():
+    """
+    increments song's likes when user likes it
+    """
+    try:
+        user = input("Enter User Name: ")
+        row = input("Song Name: ")
+        query = "UPDATE SONG SET TOTAL_LIKES = TOTAL_LIKES + 1 WHERE SONG_TITLE = '%s';" %(row)
+        cur.execute(query)
+        userid = "SELECT USER_ID FROM USER WHERE USER_NAME = '%s';" %(user)
+        cur.execute(userid)
+        userid = cur.fetchall()
+        userid = int(userid[0]["USER_ID"])
+        songid = "SELECT SONG_ID FROM SONG WHERE SONG_TITLE = '%s';" %(row)
+        cur.execute(songid)
+        songid = cur.fetchall()
+        songid = int(songid[0]["SONG_ID"])
+        query = "INSERT INTO LIKES VALUES ('%d','%d')" % (userid,songid)
+        cur.execute(query)
+        con.commit()
+        print("Liked the song successfully")
+    except Exception as e:
+        con.rollback()
+        print("Failed to insert into database")
+        print(">>>>>>>>>>>>>", e)
+    return
+    
+    
+def user_follow_artist():
+    """
+    when a user follows a artist, update artist_followers and insert a record in FOLLOWS
+    """
+    try:
+        # Takes episode details as input
+        row = {}
+        row["user_name"] = input("USER NAME: ")
+
+        Q = "SELECT USER_ID FROM USER WHERE USER_NAME = '%s' ;" % row["user_name"]
+        
+        cur.execute(Q)
+        list = cur.fetchall()
+        user_id = int(list[0]["USER_ID"])
+
+        
+        row["artist_name"] = input("ARTIST NAME: ")
+        Q1 = "SELECT ARTIST_ID, ARTIST_FOLLOWERS FROM ARTIST WHERE ARTIST_NAME = '%s' ;" % row["artist_name"]
+
+        cur.execute(Q1)
+        list = cur.fetchall()
+
+        artist_id = int(list[0]["ARTIST_ID"])
+        followers = int(list[0]["ARTIST_FOLLOWERS"]) + 1
+
+        # UPDATE QUERY
+
+        artistfollowerquery = "UPDATE ARTIST SET ARTIST_FOLLOWERS = '%d' WHERE ARTIST_ID = '%d'" %(followers, artist_id)
+        cur.execute(artistfollowerquery)
+
+        # INSERT QUERY
+        query = "INSERT INTO FOLLOWS (USER_ID, ARTIST_ID) VALUES ('%d', '%d');" % (
+            user_id, artist_id)
+        
+        cur.execute(query)
+        con.commit()
+        print("Followed successfully")
+
+    except Exception as e:
+        con.rollback()
+        print("Failed to insert into database")
+        print(">>>>>>>>>>>>>", e)
+    return
+
+def user_saves_playlist():
+    """
+    when a user saves a new playlist, update playlist_saves in PLAYLIST and insert a record in SAVES
+    """
+
+    try:
+        # Takes episode details as input
+        row = {}
+        row["user_name"] = input("USER NAME: ")
+        Q = "SELECT USER_ID FROM USER WHERE USER_NAME = '%s' ;" % row["user_name"]
+        cur.execute(Q)
+        list = cur.fetchall()
+        user_id = int(list[0]["USER_ID"])
+        
+        row["playlist_title"] = input("PLAYLIST TITLE: ")
+        Q1 = "SELECT PLAYLIST_SAVES FROM PLAYLIST WHERE PLAYLIST_TITLE = '%s' ;" % row["playlist_title"]
+
+        cur.execute(Q1)
+        list = cur.fetchall()
+        saves = int(list[0]["PLAYLIST_SAVES"]) + 1
+
+        # UPDATE QUERY
+
+        playlist_saves_query = "UPDATE PLAYLIST SET PLAYLIST_SAVES = '%d' WHERE PLAYLIST_TITLE = '%s' AND USER_ID = '%d';" %(saves, row["playlist_title"] , user_id)
+        cur.execute(playlist_saves_query)
+
+        # INSERT QUERY
+        query = "INSERT INTO SAVES (USER_ID, PLAYLIST_TITLE) VALUES ('%d', '%s');" % (
+            user_id, row["playlist_title"])
+        
+        cur.execute(query)
+        con.commit()
+        print("Saved successfully")
+
+    except Exception as e:
+        con.rollback()
+        print("Failed to insert into database")
+        print(">>>>>>>>>>>>>", e)
+    return
 
 def addEpisode():
     """
+    INSERT AND UPDATE
     add a new episode in a existing podcast
-    TO DEBUG
     """
     try:
-        # Takes user details as input
+        # Takes episode details as input
         row = {}
         print("Enter new episode's details: ")
         
         row["podcast_name"] = input("Podcast Name: ")
 
-        Q = "SELECT PODCAST_ID FROM PODCAST WHERE PODCAST_NAME = '%s' ;" % row["podcast_name"]
-        cur.execute()
+        Q = "SELECT PODCAST_ID, PODCAST_NUMBER_OF_EPISODES,PODCAST_TOTAL_DURATION FROM PODCAST WHERE PODCAST_TITLE = '%s' ;" % row["podcast_name"]
+        cur.execute(Q)
         list = cur.fetchall()
-        podcast_id = list[0]["PODCAST_ID"]
 
+        podcast_id = int(list[0]["PODCAST_ID"])
+        ep = int(list[0]["PODCAST_NUMBER_OF_EPISODES"]) + 1
         row['title'] = input("Title: ")
         row['number'] = input("Number: ")
-        row['duration'] = input("Duration: ")
+        row['duration'] = int(input("Duration: "))
         row['release_date'] = date.today()
         row['desc'] = input("Description: ")
+        
+        new_duration = int(list[0]["PODCAST_TOTAL_DURATION"]) + row["duration"]
+        
+        # UPDATE QUERY
 
+        podcastquery = "UPDATE PODCAST SET PODCAST_NUMBER_OF_EPISODES = '%d', PODCAST_TOTAL_DURATION = '%d' WHERE PODCAST_ID = '%d'" %(ep, new_duration, podcast_id)
+        cur.execute(podcastquery)
+
+        # INSERT QUERY
         query = "INSERT INTO EPISODE (PODCAST_ID, EPISODE_TITLE, EPISODE_NUMBER, EPISODE_DURATION,EPISODE_RELEASE_DATE, EPISODE_DESCRIPTION ) VALUES ('%d', '%s', '%d', '%d', '%s', '%s');" % (
-            podcast_id, row['title'], row['number'], row['duration'], row['release_date'], row['desc'])
+            podcast_id, row['title'], int(row['number']), int(row['duration']), row['release_date'], row['desc'])
         
         cur.execute(query)
         con.commit()
@@ -453,6 +658,14 @@ def dispatch(ch):
         addEpisode()
     elif(ch == 16):
         analysis_popular_albums()
+    elif(ch == 17):
+        userlikessong()
+    elif(ch == 18):
+        user_follow_artist()
+    elif(ch == 19):
+        user_saves_playlist()
+    elif(ch == 20):
+        analysis_top_genre()
     else:
         print("Error: Invalid Option")
 
@@ -486,7 +699,6 @@ while(1):
         with con.cursor() as cur:
             while(1):
                 tmp = sp.call('clear', shell=True)
-                # Here taking example of Employee Mini-world
                 print("1. Insert User")  
                 print("2. Get All Albums By Artist") 
                 print("3. Query Song")  
@@ -503,9 +715,13 @@ while(1):
                 print("14. Get premium users with specific plan")
                 print("15. Add an episode in a existing podcast")
                 print("16. Analysis of popular album")
+                print("17. User Likes Song")
+                print("18. User Follows Artist")
+                print("19. User Saves Playlist")
+                print("20. Top Genres for a User")
                 ch = int(input("Enter choice> "))
                 tmp = sp.call('clear', shell=True)
-                if ch == 17:
+                if ch == 21:
                     exit()
                 else:
                     dispatch(ch)
