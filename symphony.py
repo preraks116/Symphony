@@ -58,54 +58,40 @@ def analysis_top_genre():
         cur.execute(query)
         list_liked_song = cur.fetchall()
 
-        print(list_liked_song)
-        
-          
         query = "SELECT DISTINCT GENRE FROM SONG_GENRE;"
         cur.execute(query)
         list_all_genres = cur.fetchall()
 
-        print(list_all_genres)
-        
         genre_frequency = {}
         
         for i in list_all_genres:
             genre_frequency[i["GENRE"]] = 0
                 
-        print(genre_frequency)
-        print(type(genre_frequency))
 
 
         for i in list_liked_song:       
             q = "SELECT GENRE FROM SONG_GENRE WHERE SONG_GENRE.SONG_ID = '%d';" %(i["SONG_ID"])
             cur.execute(q)
             genre_list = cur.fetchall()
-
-            # print(type(genre_list))
-            print(genre_list)
-            #print(i)
-            
             for j in genre_list:
                 genre_frequency[j["GENRE"]] = genre_frequency[j["GENRE"]] + 1
-            
-        genre_frequency = sorted(genre_frequency, key=lambda i: i["GENRE"], reverse=True)
 
+            
+        
+        output = sorted(genre_frequency.items(), key=lambda item: item[1], reverse=True)
 
         print("Top 3 Genres: ")
-        p = 0
-        for i in genre_frequency:
-            p += 1 
-            if(p == 3):
+        for i in range (0,len(output)):
+            
+            if(i == 3):
                 break
-            print(i)
+            print(output[i][0], ":", output[i][1], sep=" ")
         
-        # print("")
-
         con.commit()
-        print("Query executed successfully")
+        print("Found your top 3 genres successfully")
     except Exception as e:
         con.rollback()
-        print("Failed to insert into database")
+        print("Failed Query")
         print(">>>>>>>>>>>>>", e)
     return
 
@@ -701,7 +687,7 @@ while(1):
                 tmp = sp.call('clear', shell=True)
                 print("1. Insert User")  
                 print("2. Get All Albums By Artist") 
-                print("3. Query Song")  
+                print("3. Query Song by Genre")  
                 print("4. Get Artist with max followers") 
                 print("5. Remove User By Email")
                 print("6. Update User Contact")
