@@ -14,7 +14,6 @@ CREATE TABLE `USER` (
   `USER_MOBILE_NUMBER` INT(10),
   `USER_IMG` CHAR(20),
   PRIMARY KEY (`USER_ID`),
-  KEY(`USER_COUNTRY`),
   KEY(`USER_EMAIL`)
 );
 
@@ -70,6 +69,7 @@ CREATE TABLE `PLAYLIST` (
   `PLAYLIST_SAVES` INT(11), 
   `IS_SECRET` BOOL,
   PRIMARY KEY (`USER_ID`, `PLAYLIST_TITLE`),
+  KEY(`PLAYLIST_TITLE`),
   CONSTRAINT `PLAYLIST_FK_USER` FOREIGN KEY (`USER_ID`) REFERENCES `USER` (`USER_ID`)
 );
 
@@ -115,7 +115,8 @@ DROP TABLE IF EXISTS `SAVES`;
 CREATE TABLE `SAVES` (
   `USER_ID` int(11) NOT NULL,
   `PLAYLIST_TITLE` char(30) NOT NULL,
-  PRIMARY KEY (`USER_ID`, `PLAYLIST_TITLE`)
+  PRIMARY KEY (`USER_ID`, `PLAYLIST_TITLE`),
+ CONSTRAINT `SAVES_FK_PLAYLIST` FOREIGN KEY (`PLAYLIST_TITLE`) REFERENCES `PLAYLIST` (`PLAYLIST_TITLE`)
 );
 
 
@@ -185,10 +186,12 @@ CREATE TABLE `PODCAST_LANGUAGE` (
 
 DROP TABLE IF EXISTS `COUNTRY_TO_COUNTRY_CODE`;
 CREATE TABLE `COUNTRY_TO_COUNTRY_CODE` (
+  `USER_ID` int(11) NOT NULL AUTO_INCREMENT,
   `COUNTRY_CODE` int(3) NOT NULL,
   `USER_COUNTRY` char(20) NOT NULL,
-  PRIMARY KEY (`USER_COUNTRY`, `COUNTRY_CODE`),
-  CONSTRAINT `COUNTRY_TO_COUNTRY_CODE_FK_USER` FOREIGN KEY (`USER_COUNTRY`) REFERENCES `USER` (`USER_COUNTRY`)
+
+  PRIMARY KEY (`USER_ID`, `COUNTRY_CODE`),
+  CONSTRAINT `COUNTRY_TO_COUNTRY_CODE_FK_USER` FOREIGN KEY (`USER_ID`) REFERENCES `USER` (`USER_ID`)
 );
 
 
@@ -239,7 +242,7 @@ INSERT INTO `PLAYLIST` VALUES (1,'Workout', 'For my monday gym mornings', 1 , tr
 UNLOCK TABLE;
 
 LOCK TABLE `PODCAST` WRITE;
-INSERT INTO `PODCAST` VALUES (1,'Morning Motivation', 'Motivation', 2, 400, 'Parth talks about morning motivation', 3) , (2,'How do i know who I am', 'Spiritual', 1, 200, 'Spirituality decoded with Gurudev', 1), (3,'The Ranveer Show', 'Trivia', 3, 730, 'Life is a never ending self improvement game', 1);
+INSERT INTO `PODCAST` VALUES (1,'Morning Motivation', 'Motivation', 2, 4000, 'Parth talks about morning motivation', 3) , (2,'How do i know who I am', 'Spiritual', 1, 200, 'Spirituality decoded with Gurudev', 1), (3,'The Ranveer Show', 'Trivia', 3, 730, 'Life is a never ending self improvement game', 1);
 UNLOCK TABLE;
 
 LOCK TABLE `PODCAST_LANGUAGE` WRITE;
@@ -275,7 +278,7 @@ INSERT INTO `SONG_LYRICS_TO_IS_EXPLICIT` VALUES (1,'dhoom machale dhooom machale
 UNLOCK TABLE;
 
 LOCK TABLE `COUNTRY_TO_COUNTRY_CODE` WRITE;
-INSERT INTO `COUNTRY_TO_COUNTRY_CODE` VALUES (91, 'India') , (86, 'China') , (1 , 'USA');
+INSERT INTO `COUNTRY_TO_COUNTRY_CODE` VALUES (1 , 91, 'India') , (2 , 91, 'India') , (5 , 91, 'India') , (4 ,86, 'China') , (3, 1 , 'USA');
 UNLOCK TABLE;
 
 LOCK TABLE `FOLLOWS` WRITE;

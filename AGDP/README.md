@@ -9,6 +9,10 @@ Parth Maradia - 2020111006
 
 Harshita - 2020101078
 
+## Demo Video Link
+
+https://drive.google.com/file/d/1X6CbCBJhCHv3fXniBXGume3X-8AWS0Yx/view?usp=sharing
+
 ## List of Commands
  
 1. Insert User (`INSERT`)

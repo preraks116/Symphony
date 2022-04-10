@@ -369,12 +369,12 @@ def updateusercontact():
     """
     try:
         # Takes user details as input
-        print("Enter user's email: ")
-        row = input("Email: ")
+        row = {}
+        row['email'] = input("Email: ")
         print("Enter new user's contact: ")
         row['mobile'] = input("Mobile: ")
         query = "UPDATE USER SET USER_MOBILE_NUMBER = '%s' WHERE USER_EMAIL = '%s';" %(
-            row['mobile'], row)
+            row['mobile'], row['email'])
         # print(query)
         cur.execute(query)
         con.commit()
@@ -510,13 +510,13 @@ def getalbumsbyartist():
 
 def getartistwith1lakhfollower():
     """
-    Function to get artist with over 1 lakh followers
+    Function to get artist with over 50 million followers
     """
     try:
-        query = "SELECT ARTIST_NAME FROM ARTIST WHERE ARTIST_FOLLOWERS >= 100000;"
+        query = "SELECT ARTIST_NAME FROM ARTIST WHERE ARTIST_FOLLOWERS >= 50000000;"
         cur.execute(query)
         row = cur.fetchall()
-        print("Artist with over 1 lakh followers: ")
+        print("Artist with over 50 million followers: ")
         
         for i in row:
             print(i['ARTIST_NAME'])
@@ -555,7 +555,6 @@ def playlistwithmaxsaves():
         query = "SELECT * FROM PLAYLIST WHERE PLAYLIST_SAVES = (SELECT MAX(PLAYLIST_SAVES) FROM PLAYLIST);"
         cur.execute(query)
         row = cur.fetchall()
-        print("podcasts with minimum duration: ")
         print(row[0]['PLAYLIST_TITLE'])
         con.commit()
     except Exception as e:
@@ -575,12 +574,13 @@ def premiumuser():
         cur.execute(query)
         planid = cur.fetchall()
         print("Users with this plan: ")
-        Q2 = "SELECT USER_NAME FROM PREMIUM_USERS WHERE PLAN_ID = '%d';" %(planid[0]['PLAN_ID'])
+        Q2 = "SELECT PREMIUM_USERS.USER_ID,USER.USER_NAME FROM PREMIUM_USERS, USER WHERE USER.USER_ID = PREMIUM_USERS.USER_ID AND PREMIUM_USERS.PLAN_ID = '%d';" %(planid[0]['PLAN_ID'])
         cur.execute(Q2)
         userid = cur.fetchall()
 
         for i in userid:
             print(i["USER_NAME"])
+     
 
         con.commit()
     except Exception as e:
@@ -695,7 +695,7 @@ while(1):
                 print("8. Get Podcasts of greater than 1 hour duration")
                 print("9. Get Playlist with max saves")
                 print("10. Get Podcast with minimum duration")
-                print("11. Get artist with over 1 lakh followers")
+                print("11. Get artist with over 50 million followers")
                 print("12. Query Podcast Language")
                 print("13. Get all songs in album")
                 print("14. Get premium users with specific plan")
